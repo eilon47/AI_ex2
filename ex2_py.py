@@ -1,4 +1,5 @@
-import numpy as np
+from decision_tree import DecisionTree, Node
+import utils as ut
 """
 Entropy(S) = ∑ – p(I) . log2p(I)
 Gain(S, A) = Entropy(S) – ∑ [ p(S|A) . Entropy(S|A) ]
@@ -24,53 +25,14 @@ ID3 (Examples, Target_Attribute, Attributes)
     Return Root
 """
 
-class DecisionTree(object):
-    pass
 
-
-
-def entropy(data, decision_att, decision_yes , attribute=None, att_value=None):
-    if attribute is None:
-        attribute = decision_att
-        att_value = decision_yes
-    minimized_data = [d for d in data if d[attribute] == att_value]
-    num_of_yes = len([d for d in minimized_data if d[decision_att] == decision_yes])
-    p_yes = float(num_of_yes)/ float(len(minimized_data)) if attribute is not decision_att\
-        else float(num_of_yes)/ float(len(data))
-    p_no = 1 - p_yes
-    if p_no == 0 or p_yes == 0:
-        return 0
-    if decision_att == attribute:
-        return -p_no*np.log2(p_no)-p_yes*np.log2(p_yes)
-    s = float(len(minimized_data))/ float(len(data))
-    t = -p_no*np.log2(p_no)-p_yes*np.log2(p_yes)
-    return s*t
-
-
-def gain(data, decision_att, attribute):
-    attribute_value_set = set([d[attribute] for d in data])
-    sum_values = []
-    for value in attribute_value_set:
-        entropy_s_att = entropy(data, decision_att, attribute, value)
-        sum_values.append(-entropy_s_att)
-    return np.sum([v for v in sum_values])
-
-
-
-
-
-
-def parse_data(file_path, separator="\t"):
-    data = []
-    fd = open(file_path, 'r')
-    att = fd.readline().strip().split(separator)
-    for line in fd:
-        values = line.strip().split(separator)
-        data.append(dict(zip(att, values)))
-    fd.close()
-    return data
 
 
 if __name__ == '__main__':
-    pass
+    root = Node("a", "1")
+    root.add_child(Node("b", '2', "Yes"))
+    c = Node("C", "3")
+    c.add_child(Node("D", "4", "No"))
+    root.add_child(c)
+    print(root.string_node_tree())
 
