@@ -1,8 +1,4 @@
-import os
-
 import utils as ut
-import operator
-
 
 class Node(object):
 
@@ -86,9 +82,39 @@ def train(data, tags, attributes):
     return root
 
 
-def predict(data, tree):
-    if tree.decision is not None:
-        return tree.decision
+def test(data, tags, tree):
+    total = len(data)
+    new_tags = []
+    correct = 0.0
+    for i,d in enumerate(data):
+        gold_tag = tags[i]
+        tag = predict(data[i], tree)
+        if tag is None:
+            tag = tree.most_common
+        if tag == gold_tag:
+            correct += 1.0
+        new_tags.append(tag)
+    acc = correct/total
+    print(acc*100)
+    return acc, new_tags
 
+
+def predict(data, tree):
+    tag = None
+    if tree.decision is not None:
+        tag = tree.decision
+    elif tree.att is not None:
+        value = data[tree.att]
+        for v in tree.next:
+            if v.value == value:
+                tag = predict(data, v)
+                if tag is not None:
+                    break
+    else:
+        for ne in tree.next:
+            tag = predict(data, ne)
+            if tag is not None:
+                break
+    return tag
 
 
