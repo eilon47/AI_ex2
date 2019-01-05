@@ -5,76 +5,90 @@ import operator
 
 
 class Node(object):
-    def __init__(self, att, value, decision=None):
+
+    def __init__(self, att=None, value=None, decision=None, most_common=""):
         self.att = att
         self.value = value
         self.decision = decision
-        self.childs = []
+        self.depth = 0
+        self.next = []
+        self.most_common = most_common
 
-    def add_child(self, node):
-        self.childs.append(node)
+    def __contains__(self, item):
+        if item == self.value:
+            return True
+        for v in self.next:
+            if v.value == item:
+                return True
+            if item in v:
+                return True
+        return False
 
-    def string_node(self):
-        if self.decision is not None and len(self.childs) is 0:
-            return "{}={}:{}".format(str(self.att),str(self.value), self.decision)
-        return "{}={}".format(str(self.att),str(self.value))
+    def __getitem__(self, item):
+        if item in self:
+            if self.value == item:
+                return self
+            if self.value is None:
+                for v in self.next:
+                    if v.value == item:
+                        return v
+        return None
 
-    def string_node_tree(self, depth=1):
-        if len(self.childs) is 0:
-            print(self.string_node())
-            return self.string_node()
-        else:
-            str_ret = self.string_node() + os.linesep
-            print(str_ret)
-            for node in self.childs:
-                str_ret += "\t"*depth + "|{}".format(node.string_node_tree(depth=depth+1)) + os.linesep
-            return str_ret
-
-class DecisionTree(object):
-    def __init__(self, data, decision_att, decision_yes, decision_no):
-        self.data = data
-        self.decision_att = decision_att
-        self.decision_yes = decision_yes
-        self.decision_no = decision_no
-        self.root = self.set_root()
-        self.kids = {}
-        self.create_sub_tree()
-
-    def set_root(self):
-        keys = self.data[0].keys()
-        results = {}
-        self.s_entropy = ut.entropy(self.data, self.decision_att, self.decision_yes)
-        if self.s_entropy == 0:
-            return self.decision_no
-        if self.s_entropy == 1:
-            return self.decision_yes
-        for key in keys:
-            if key == "Day":
-                continue
-            key_gain = ut.gain(self.data, self.decision_att, self.decision_yes, key)
-            results[key] = self.s_entropy - key_gain
-
-        return max(results.items(), key=operator.itemgetter(1))[0]
-
-    def create_sub_tree(self):
-        options = ut.get_att_values(self.root)
-        for o in options:
-            minimized = ut.minimize_data(self.data, self.root, o)
-            all_yes = float(len([d for d in minimized if d[self.decision_att] == self.decision_yes]))/float(len(minimized))
-            if all_yes == 1:
-                self.kids[o] = self.decision_yes
-            elif all_yes == 0:
-                self.kids[o] = self.decision_no
+    def __str__(self):
+        if self.att is None and self.value is not None:
+            if self.decision is None:
+                string = self.value + "\n"
+                for ne in self.next:
+                    ne.depth = self.depth
+                    string += str(ne)
             else:
-                self.kids[o] = DecisionTree(minimized, self.decision_att, self.decision_yes, self.decision_no)
+                string = "{}:{}".format(self.value, self.decision)
+            return string
+        elif self.att is not None:
+            string = ""
+            self.next.sort(key=lambda x: x.value.lower())
+            for v in self.next:
+                if v.decision is not None:
+                    string += "{}{}{}={}\n".format("\t"*self.depth,"|" if self.depth>0 else "",self.att, v)
+                else:
+                    v.depth = self.depth + 1
+                    string += "{}{}{}={}".format("\t"*self.depth,"|" if self.depth>0 else "",self.att, v)
+            return string
 
 
+def train(data, tags, attributes):
+    if len(data) != len(tags):
+        raise ValueError("the data length and the tags length should be equal!")
+    most_common = ut.most_common_tag(tags)
+    if not data or len(attributes) is 0:
+        return most_common
+    if tags.count(tags[0]) is len(tags):
+        return tags[0]
+    gains = {}
+    for att in attributes:
+        gains[att] = ut.gain(data, tags, att)
+    max_att = max(gains, key=lambda k: gains[k])
+    possible_values = ut.get_att_values(max_att)
+    root = Node(att=max_att, most_common=most_common)
+    for v in possible_values:
+        node = Node(value=v)
+        sub_data, sub_tags = ut.minimize_data(data, max_att, v, tags)
+        sub_att = attributes.copy()
+        sub_att.remove(max_att)
+        if len(sub_tags) == len(sub_data) == 0:
+            continue
+        result = train(sub_data, sub_tags, sub_att)
+        if type(result) is str:
+            node.decision = result
+        else:
+            node.next.append(result)
+        root.next.append(node)
+    return root
 
-    def print_root(self):
-        print(self.root)
 
-    def print_tree(self):
-        pass
+def predict(data, tree):
+    if tree.decision is not None:
+        return tree.decision
 
 
 
