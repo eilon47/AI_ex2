@@ -94,8 +94,7 @@ def test(data, tags, tree):
         if tag == gold_tag:
             correct += 1.0
         new_tags.append(tag)
-    acc = correct/total
-    print(acc*100)
+    acc = (correct/total) * 100
     return acc, new_tags
 
 
