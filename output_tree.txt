@@ -1,0 +1,14 @@
+sex=female
+	|pclass=1st
+		|age=adult:yes
+	|pclass=2nd
+		|age=adult:yes
+	|pclass=3rd
+		|age=adult:no
+	|pclass=crew:yes
+sex=male
+	|age=adult
+		|pclass=1st:no
+		|pclass=2nd:no
+		|pclass=3rd:no
+		|pclass=crew:no

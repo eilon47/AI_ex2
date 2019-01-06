@@ -95,7 +95,7 @@ def test(data, tags, tree):
             correct += 1.0
         new_tags.append(tag)
     acc = (correct/total) * 100
-    return acc, new_tags
+    return new_tags, acc
 
 
 def predict(data, tree):
