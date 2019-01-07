@@ -1,7 +1,8 @@
 import utils as ut
 
-class Node(object):
 
+class Node(object):
+    # Class for nodes in the tree
     def __init__(self, att=None, value=None, decision=None, most_common=""):
         self.att = att
         self.value = value
@@ -117,3 +118,7 @@ def predict(data, tree):
     return tag
 
 
+if __name__ == '__main__':
+    _, data, tags = ut.parse_data("train.txt", tagged_data=True)
+    tree = train(data, tags, list(data[0].keys()))
+    print(tree)

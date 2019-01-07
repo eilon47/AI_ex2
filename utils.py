@@ -46,7 +46,7 @@ def get_att_values(attribute):
     return ATT_VALUES[attribute]
 
 
-def parse_data(file_path, separator="\t", indexed=False, tagged_data=False):
+def parse_train_data(file_path, separator="\t", indexed=False, tagged_data=False):
     global ATT_VALUES
     data,tags, indexes = [], [], []
     print("Parsing data from {}".format(file_path))
@@ -63,6 +63,23 @@ def parse_data(file_path, separator="\t", indexed=False, tagged_data=False):
         for k,v in zip(attributes,values):
             d[k] = v
             ATT_VALUES[k].add(v)
+        data.append(d)
+        tags.append(tag)
+        indexes.append(index)
+    fd.close()
+    return indexes, data, tags
+
+
+
+def parse_test_data(file_path, separator="\t", indexed=False, tagged_data=False):
+    data,tags, indexes = [], [], []
+    print("Parsing data from {}".format(file_path))
+    fd = open(file_path, 'r')
+    att = fd.readline()
+    index_att, attributes, decision_att = split_line(att, separator, indexed, tagged_data)
+    for line in fd:
+        index, values, tag = split_line(line, separator, indexed, tagged_data)
+        d = dict(zip(attributes, values))
         data.append(d)
         tags.append(tag)
         indexes.append(index)
