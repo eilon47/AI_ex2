@@ -11,29 +11,12 @@ class Node(object):
         self.next = []
         self.most_common = most_common
 
-    def __contains__(self, item):
-        if item == self.value:
-            return True
-        for v in self.next:
-            if v.value == item:
-                return True
-            if item in v:
-                return True
-        return False
-
-    def __getitem__(self, item):
-        if item in self:
-            if self.value == item:
-                return self
-            if self.value is None:
-                for v in self.next:
-                    if v.value == item:
-                        return v
-        return None
 
     def __str__(self):
+        # Printing this node and it's sub trees if it has.
         if self.att is None and self.value is not None:
             if self.decision is None:
+                # if its a leaf
                 string = self.value + "\n"
                 for ne in self.next:
                     ne.depth = self.depth
@@ -43,6 +26,7 @@ class Node(object):
             return string
         elif self.att is not None:
             string = ""
+            # sort it keys.
             self.next.sort(key=lambda x: x.value.lower())
             for v in self.next:
                 if v.decision is not None:
@@ -54,26 +38,35 @@ class Node(object):
 
 
 def train(data, tags, attributes):
+    # training an creating tree on data with tags
     if len(data) != len(tags):
         raise ValueError("the data length and the tags length should be equal!")
+    # find most common tag
     most_common = ut.most_common_tag(tags)
     if not data or len(attributes) is 0:
+        # if there is no more data return the most common tag
         return most_common
     if tags.count(tags[0]) is len(tags):
+        # if all tags are the same return its tag.
         return tags[0]
     gains = {}
+    # find the gain for each attribute
     for att in attributes:
         gains[att] = ut.gain(data, tags, att)
+    # choose the attribute with the maximum gain value
     max_att = max(gains, key=lambda k: gains[k])
+    # get all possible values for this attribute.
     possible_values = ut.get_att_values(max_att)
     root = Node(att=max_att, most_common=most_common)
     for v in possible_values:
         node = Node(value=v)
         sub_data, sub_tags = ut.minimize_data(data, max_att, v, tags)
+        # copy attributes and remove max atrtibute
         sub_att = attributes.copy()
         sub_att.remove(max_att)
         if len(sub_tags) == len(sub_data) == 0:
             continue
+        # create the sub tree
         result = train(sub_data, sub_tags, sub_att)
         if type(result) is str:
             node.decision = result
@@ -84,13 +77,16 @@ def train(data, tags, attributes):
 
 
 def test(data, tags, tree):
+    # testing data on the tree and comparing it to the correct tags
     total = len(data)
     new_tags = []
     correct = 0.0
     for i,d in enumerate(data):
         gold_tag = tags[i]
+        # predict tag according to the tree
         tag = predict(data[i], tree)
         if tag is None:
+            # if the tree could not tag the data give it the most common.
             tag = tree.most_common
         if tag == gold_tag:
             correct += 1.0
@@ -100,6 +96,8 @@ def test(data, tags, tree):
 
 
 def predict(data, tree):
+    # get a decision on data according to the tree.
+    # return a tag
     tag = None
     if tree.decision is not None:
         tag = tree.decision
@@ -119,6 +117,7 @@ def predict(data, tree):
 
 
 if __name__ == '__main__':
-    _, data, tags = ut.parse_data("train.txt", tagged_data=True)
+    _, data, tags = ut.parse_train_data("train.txt", tagged_data=True)
     tree = train(data, tags, list(data[0].keys()))
     print(tree)
+
