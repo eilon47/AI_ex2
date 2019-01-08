@@ -10,6 +10,7 @@ P_YES = 0
 P_NO = 0
 
 def train(data, tags):
+    # save the requited data to
     global YES, NO, P_YES, P_NO, data_yes, data_no
     data_yes, data_no = [], []
     YES, NO = ut.get_binaries_values(list(set(tags)))
@@ -23,6 +24,7 @@ def train(data, tags):
 
 
 def predict_example(example):
+    # make a prediction on one example according to the data
     result_yes = {}
     result_no = {}
     for att, value in example.items():
@@ -31,23 +33,27 @@ def predict_example(example):
         for d in data_yes:
             if d[att] == value:
                 count += 1.0
+        # smoothing
         result_yes[value] = count/(len(data_yes) + possible_values)
         count = 0.0
         for d in data_no:
             if d[att] == value:
                 count += 1.0
+        # smoothing
         result_no[value] = count/(len(data_no) + possible_values)
 
     result_yes = result_yes.values()
     result_no = result_no.values()
     result_yes = reduce(mul, result_yes, 1) * P_YES
     result_no = reduce(mul, result_no, 1) * P_NO
+    # choose tag with the highest probability
     if result_no > result_yes:
         return NO
     return YES
 
 
 def predict(data, tags, examples, tags_e):
+    # predict a full data set according to the known data and calculate the accuracy
     train(data, tags)
     true = 0.0
     new_tags = []
@@ -61,8 +67,8 @@ def predict(data, tags, examples, tags_e):
 
 
 if __name__ == '__main__':
-    indexes, data, tags = ut.parse_data("data\\train.txt", tagged_data=True)
-    _, tests, tags_t = ut.parse_data("data\\test.txt", tagged_data=True)
+    indexes, data, tags = ut.parse_train_data("train.txt", tagged_data=True)
+    _, tests, tags_t = ut.parse_test_data("test.txt", tagged_data=True)
     predictions, acc = predict(data, tags, tests, tags_t)
     print(acc)
 
