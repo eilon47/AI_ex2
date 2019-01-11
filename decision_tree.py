@@ -56,7 +56,9 @@ def train(data, tags, attributes):
     # choose the attribute with the maximum gain value
     max_att = max(gains, key=lambda k: gains[k])
     # get all possible values for this attribute.
-    possible_values = ut.get_att_values(max_att)
+    if gains[max_att] == 0:
+        return most_common
+    possible_values = list(ut.get_att_values(max_att))
     root = Node(att=max_att, most_common=most_common)
     for v in possible_values:
         node = Node(value=v)
@@ -117,6 +119,9 @@ def predict(data, tree):
 
 
 if __name__ == '__main__':
+    tree = [{"b":4}, {"c":5}, {"a":1}]
+    tree = sorted(tree, key=lambda x: list(x.keys())[0])
+
     _, data, tags = ut.parse_train_data("train.txt", tagged_data=True)
     tree = train(data, tags, list(data[0].keys()))
     print(tree)
